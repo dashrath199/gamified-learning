@@ -1,4 +1,3 @@
-// This is a simplified game engine. A production version would be more robust.
 document.addEventListener('DOMContentLoaded', () => {
     const gameContainer = document.getElementById('game-container');
     if (!gameContainer) return;
@@ -21,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameArea: document.getElementById('game-area'),
         nextBtn: document.getElementById('next-question-btn'),
         submitBtn: document.getElementById('submit-game-btn'),
+        progressBar: document.getElementById('progress-bar'),
     };
 
     function startTimer() {
@@ -30,6 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const seconds = (timeElapsed % 60).toString().padStart(2, '0');
             elements.timer.textContent = `${minutes}:${seconds}`;
         }, 1000);
+    }
+
+    function updateProgress() {
+        const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+        elements.progressBar.style.width = `${progress}%`;
     }
 
     function renderQuestion() {
@@ -42,70 +47,66 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.questionCounter.textContent = `${currentQuestionIndex + 1}/${questions.length}`;
         let html = ``;
 
-        // Render based on game type
         if (gameType === 'MCQ') {
             html = `
-                <h3 class="text-xl font-semibold mb-4">${question.prompt}</h3>
-                <div class="space-y-3">
-                    ${question.options.map((option, index) => `
-                        <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-100">
-                            <input type="radio" name="option" value="${index}" class="mr-3">
-                            <span>${option}</span>
-                        </label>
-                    `).join('')}
+                <div class="w-full">
+                    <h3 class="text-2xl font-semibold text-center mb-6">${question.prompt}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${question.options.map((option, index) => `
+                            <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all has-[:checked]:bg-purple-100 has-[:checked]:border-brand-purple hover:border-brand-purple">
+                                <input type="radio" name="option" value="${index}" class="h-4 w-4 text-brand-purple focus:ring-brand-purple border-gray-300 mr-4">
+                                <span class="text-lg">${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
                 </div>
             `;
-        } // Add other game types (FIB, SEQ) here...
+        }
         
         elements.gameArea.innerHTML = html;
+        updateProgress();
     }
     
     function collectAnswer() {
         if (gameType === 'MCQ') {
             const selectedOption = elements.gameArea.querySelector('input[name="option"]:checked');
-            if (selectedOption) {
-                 userAnswers[currentQuestionIndex] = parseInt(selectedOption.value);
-            } else {
-                 userAnswers[currentQuestionIndex] = null; // No answer
-            }
+            userAnswers[currentQuestionIndex] = selectedOption ? parseInt(selectedOption.value) : null;
         }
-        // ... logic for other game types
     }
 
     async function submitResults() {
-        const payload = {
-            answers: userAnswers,
-            time_taken: timeElapsed,
-        };
+        clearInterval(timerInterval);
+        const payload = { answers: userAnswers, time_taken: timeElapsed };
 
-        const response = await fetch(`/api/v1/games/${gameId}/submit/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        });
+        try {
+            const response = await fetch(`/api/v1/games/${gameId}/submit/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            });
 
-        if (response.ok) {
-            const result = await response.json();
-            showResultModal(result);
-        } else {
-            alert('Failed to submit results.');
+            if (response.ok) {
+                const result = await response.json();
+                document.getElementById('modal-score').textContent = result.score;
+                document.getElementById('modal-xp').textContent = result.xp_earned;
+                const badgesHtml = result.awarded_badges.map(b => `<p>🏆 New Badge: ${b}</p>`).join('');
+                document.getElementById('modal-badges').innerHTML = badgesHtml;
+                document.getElementById('result-modal').classList.remove('hidden');
+            } else {
+                alert('Failed to submit results.');
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            alert('An error occurred while submitting results.');
         }
-    }
-    
-    function showResultModal(result) {
-        document.getElementById('modal-score').textContent = result.score;
-        document.getElementById('modal-xp').textContent = result.xp_earned;
-        const badgesHtml = result.awarded_badges.map(b => `<p>🏆 New Badge: ${b}</p>`).join('');
-        document.getElementById('modal-badges').innerHTML = badgesHtml;
-        document.getElementById('result-modal').classList.remove('hidden');
     }
 
     function endGame() {
-        clearInterval(timerInterval);
-        elements.gameArea.innerHTML = `<h2 class="text-2xl text-center">Game Complete! Submitting your results...</h2>`;
+        elements.gameArea.innerHTML = `<h2 class="text-2xl text-center font-semibold">Game Complete!</h2><p class="text-gray-600 text-center mt-2">Submitting your results...</p>`;
         elements.nextBtn.classList.add('hidden');
         elements.submitBtn.classList.add('hidden');
         submitResults();
@@ -126,16 +127,25 @@ document.addEventListener('DOMContentLoaded', () => {
         endGame();
     });
     
-    // Initial fetch
+    // Initial fetch to start the game
     fetch(`/api/v1/games/${gameId}/`, { headers: { 'Authorization': `Bearer ${token}` } })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to load game data');
+            return res.json();
+        })
         .then(data => {
             questions = data.questions;
-            if (questions.length > 0) {
+            if (questions && questions.length > 0) {
                 renderQuestion();
                 startTimer();
             } else {
-                elements.gameArea.innerHTML = `<p>No questions found for this game.</p>`;
+                elements.gameArea.innerHTML = `<p class="text-center text-gray-500">No questions found for this game.</p>`;
+                elements.nextBtn.classList.add('hidden');
             }
+        })
+        .catch(err => {
+            console.error("Game loading error:", err);
+            elements.gameArea.innerHTML = `<p class="text-center text-red-500">Could not load the game. Please try again later.</p>`;
+            elements.nextBtn.classList.add('hidden');
         });
 });

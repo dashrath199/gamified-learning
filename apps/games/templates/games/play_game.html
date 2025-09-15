@@ -1,53 +1,67 @@
-    {% extends 'base.html' %}
+{% extends 'base.html' %}
 
-    {% block title %}Playing: {{ game.title }}{% endblock %}
+{% block title %}Playing: {{ game.title }}{% endblock %}
 
-    {% block content %}
-    <div id="game-container" class="bg-white shadow rounded-lg p-6 max-w-4xl mx-auto"
-        data-game-id="{{ game.id }}"
-        data-game-type="{{ game.game_type }}">
+{% block content %}
+<div id="game-container" class="bg-white shadow-lg rounded-2xl p-6 md:p-8 max-w-4xl mx-auto"
+    data-game-id="{{ game.id }}"
+    data-game-type="{{ game.game_type }}">
 
-        <div id="game-header" class="border-b pb-4 mb-4">
-            <h1 class="text-3xl font-bold text-gray-900">{{ game.title }}</h1>
-            <p class="text-gray-600">{{ game.description }}</p>
-            <div class="mt-4 flex justify-between items-center text-lg">
-                <div><strong>Time:</strong> <span id="timer">00:00</span></div>
-                <div><strong>Score:</strong> <span id="score">0</span></div>
-                <div><strong>Question:</strong> <span id="question-counter">0/0</span></div>
+    <div id="game-header" class="border-b pb-4 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">{{ game.title }}</h1>
+                <p class="text-gray-600 mt-1">{{ game.subject.name }}</p>
+            </div>
+            <div class="flex items-center gap-6 text-lg">
+                <div class="text-center">
+                    <div class="text-xs text-gray-500">SCORE</div>
+                    <div id="score" class="font-bold text-brand-purple">0</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-xs text-gray-500">TIME</div>
+                    <div id="timer" class="font-bold text-brand-purple font-mono">00:00</div>
+                </div>
             </div>
         </div>
-
-        <div id="game-area" class="min-h-[300px]">
-            </div>
-
-        <div id="game-controls" class="mt-6 flex justify-end">
-            <button id="submit-game-btn" class="hidden rounded-md bg-green-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-green-700">Finish Game</button>
-            <button id="next-question-btn" class="rounded-md bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700">Next Question</button>
+        <div class="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+            <div id="progress-bar" class="bg-brand-purple h-2.5 rounded-full" style="width: 0%"></div>
         </div>
     </div>
 
-    <div id="result-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3 text-center">
-        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    <div id="game-area" class="min-h-[300px] flex items-center justify-center">
+        <div class="text-center text-gray-500">Loading Game...</div>
+    </div>
+
+    <div id="game-controls" class="mt-8 flex justify-between items-center">
+        <div class="text-sm font-medium text-gray-500">Question <span id="question-counter">0/0</span></div>
+        <div>
+            <button id="submit-game-btn" class="hidden rounded-md bg-green-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-green-500 transition-colors">Finish Game</button>
+            <button id="next-question-btn" class="rounded-md bg-brand-purple px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-opacity-90 transition-colors">Next Question</button>
         </div>
-        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Game Over!</h3>
-        <div class="mt-2 px-7 py-3">
-            <p class="text-sm text-gray-500">Your final score: <strong id="modal-score"></strong></p>
-            <p class="text-sm text-gray-500">XP Earned: <strong id="modal-xp"></strong></p>
-            <div id="modal-badges"></div>
+    </div>
+</div>
+
+<div id="result-modal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 z-50">
+    <div class="relative bg-white rounded-lg shadow-xl p-8 max-w-sm w-full text-center">
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
+            <svg class="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
         </div>
-        <div class="items-center px-4 py-3">
-            <a href="{% url 'dashboard' %}" class="px-4 py-2 bg-indigo-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-            Back to Dashboard
+        <h3 class="text-2xl mt-4 font-semibold text-gray-900">Game Over!</h3>
+        <div class="mt-4 space-y-2">
+            <p class="text-lg text-gray-600">Your final score: <strong id="modal-score" class="text-brand-purple"></strong></p>
+            <p class="text-lg text-gray-600">XP Earned: <strong id="modal-xp" class="text-brand-purple"></strong></p>
+            <div id="modal-badges" class="mt-3 text-yellow-500 font-semibold"></div>
+        </div>
+        <div class="mt-6">
+            <a href="{% url 'users:dashboard' %}" class="block w-full rounded-md bg-brand-purple px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-opacity-90">
+                Back to Dashboard
             </a>
         </div>
-        </div>
     </div>
-    </div>
-    {% endblock %}
+</div>
+{% endblock %}
 
-    {% block extra_js %}
-    <script src="/static/js/game_engine.js"></script>
-    {% endblock %}
+{% block extra_js %}
+<script src="/static/js/game_engine.js"></script>
+{% endblock %}
