@@ -3,26 +3,43 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<header class="bg-white shadow-sm">
-    <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-        <h1 class="text-lg font-semibold leading-6 text-gray-900">Dashboard</h1>
-    </div>
-</header>
-<main class="py-10">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div id="user-stats" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div class="bg-white overflow-hidden shadow rounded-lg p-5 skeleton-loader h-28"></div>
-            <div class="bg-white overflow-hidden shadow rounded-lg p-5 skeleton-loader h-28"></div>
-            <div class="bg-white overflow-hidden shadow rounded-lg p-5 skeleton-loader h-28"></div>
+<main>
+    <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="relative bg-brand-dark-blue text-white my-8 rounded-2xl overflow-hidden">
+            <div class="absolute inset-0">
+                <img src="https://images.unsplash.com/photo-1543286386-713bdd548da4?q=80&w=2940&auto=format&fit=crop" alt="Background image of books and learning materials" class="w-full h-full object-cover opacity-20">
+            </div>
+            <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between p-8 md:p-16">
+                <div class="text-center lg:text-left">
+                    <p class="font-semibold text-lg text-brand-purple">Welcome Back!</p>
+                    <h1 class="text-3xl md:text-5xl font-extrabold mt-2">Ace Your Next Challenge</h1>
+                    <p class="mt-4 max-w-lg text-gray-300">Dive into your subjects, conquer new topics, and watch your knowledge grow. Every game you play is a step towards mastery.</p>
+                    <a href="#subject-list-section" class="mt-8 inline-block bg-brand-purple text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-opacity-90 transition-transform hover:scale-105">
+                        Start Learning
+                    </a>
+                </div>
+                <div class="mt-8 lg:mt-0">
+                    <img src="https://static.vecteezy.com/system/resources/previews/011/045/233/original/3d-male-character-sitting-on-a-stack-of-books-and-reading-a-book-free-png.png" alt="Student character" class="max-w-xs md:max-w-sm">
+                </div>
+            </div>
         </div>
 
-        <div class="mt-10">
-            <h2 class="text-2xl font-semibold text-gray-800">Your Subjects</h2>
-            <div id="subject-list" class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                <div class="bg-white rounded-lg shadow h-48 skeleton-loader"></div>
-                <div class="bg-white rounded-lg shadow h-48 skeleton-loader"></div>
-                <div class="bg-white rounded-lg shadow h-48 skeleton-loader"></div>
-                <div class="bg-white rounded-lg shadow h-48 skeleton-loader"></div>
+        <div class="px-4 sm:px-0">
+            <h2 class="text-2xl font-bold leading-6 text-gray-900 mt-12">Your Progress</h2>
+            <div id="user-stats" class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="bg-white overflow-hidden shadow rounded-lg h-28 skeleton-loader"></div>
+                <div class="bg-white overflow-hidden shadow rounded-lg h-28 skeleton-loader"></div>
+                <div class="bg-white overflow-hidden shadow rounded-lg h-28 skeleton-loader"></div>
+            </div>
+        </div>
+
+        <div id="subject-list-section" class="mt-12 px-4 sm:px-0">
+            <h2 class="text-2xl font-bold leading-6 text-gray-900">Choose Your Subject</h2>
+            <p class="mt-1 text-sm text-gray-500">Select a subject to start playing and earning XP!</p>
+            <div id="subject-list" class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                 <div class="bg-white rounded-lg shadow h-48 skeleton-loader"></div>
+                 <div class="bg-white rounded-lg shadow h-48 skeleton-loader"></div>
+                 <div class="bg-white rounded-lg shadow h-48 skeleton-loader"></div>
             </div>
         </div>
     </div>
@@ -34,7 +51,6 @@
 document.addEventListener('DOMContentLoaded', async function() {
     const token = localStorage.getItem('accessToken');
     if (!token) {
-        // THIS IS THE CORRECTED LINE:
         window.location.href = '{% url "users:login" %}';
         return;
     }
@@ -54,18 +70,25 @@ document.addEventListener('DOMContentLoaded', async function() {
         const navUsername = document.getElementById('nav-username');
         if (navUsername) navUsername.textContent = user.full_name;
         
+        // Update stats cards
         statsContainer.innerHTML = `
-            <div class="bg-white overflow-hidden shadow rounded-lg p-5 transition-all hover:shadow-lg">
-                <div class="text-sm font-medium text-gray-500 truncate">Level</div>
-                <div class="mt-1 text-3xl font-semibold text-indigo-600">${user.level}</div>
+            <div class="relative overflow-hidden rounded-lg bg-white p-5 shadow transition-transform hover:scale-105">
+                <dt><p class="truncate text-sm font-medium text-gray-500">Level</p></dt>
+                <dd class="mt-1 flex items-baseline">
+                    <p class="text-4xl font-semibold text-brand-purple">${user.level}</p>
+                </dd>
             </div>
-            <div class="bg-white overflow-hidden shadow rounded-lg p-5 transition-all hover:shadow-lg">
-                <div class="text-sm font-medium text-gray-500 truncate">XP</div>
-                <div class="mt-1 text-3xl font-semibold text-indigo-600">${user.xp}</div>
+            <div class="relative overflow-hidden rounded-lg bg-white p-5 shadow transition-transform hover:scale-105">
+                <dt><p class="truncate text-sm font-medium text-gray-500">Total XP</p></dt>
+                <dd class="mt-1 flex items-baseline">
+                    <p class="text-4xl font-semibold text-brand-purple">${user.xp}</p>
+                </dd>
             </div>
-            <div class="bg-white overflow-hidden shadow rounded-lg p-5 transition-all hover:shadow-lg">
-                <div class="text-sm font-medium text-gray-500 truncate">Badges</div>
-                <div class="mt-1 text-3xl font-semibold text-indigo-600">${data.badges.length}</div>
+            <div class="relative overflow-hidden rounded-lg bg-white p-5 shadow transition-transform hover:scale-105">
+                <dt><p class="truncate text-sm font-medium text-gray-500">Badges Earned</p></dt>
+                <dd class="mt-1 flex items-baseline">
+                    <p class="text-4xl font-semibold text-brand-purple">${data.badges.length}</p>
+                </dd>
             </div>
         `;
 
@@ -77,17 +100,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         if (subjects.length > 0) {
             subjectContainer.innerHTML = subjects.map(subject => `
-                <div class="group bg-white overflow-hidden shadow rounded-lg p-5 flex flex-col justify-between transition-all hover:shadow-xl hover:-translate-y-1">
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900">${subject.name} ${subject.icon || ''}</h3>
-                        <p class="mt-2 text-sm text-gray-500">${subject.description.substring(0, 50)}...</p>
+                <a href="/games/subject/${subject.id}/" class="group relative block overflow-hidden rounded-lg bg-white p-6 shadow transition-all hover:shadow-lg hover:-translate-y-1">
+                    <div class="flex items-center gap-4">
+                        <div class="text-4xl">${subject.icon || '📚'}</div>
+                        <div>
+                            <h3 class="text-lg font-semibold leading-6 text-gray-900">${subject.name}</h3>
+                            <p class="mt-1 text-sm text-gray-500">${subject.description.substring(0, 100)}...</p>
+                        </div>
                     </div>
-                    <div class="mt-4">
-                        <a href="/games/subject/${subject.id}/" class="w-full text-center rounded-md bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 transition-all group-hover:bg-indigo-500">
-                            Play Games
-                        </a>
-                    </div>
-                </div>
+                </a>
             `).join('');
         } else {
             subjectContainer.innerHTML = '<p class="text-gray-500 col-span-full">No subjects found for your grade.</p>';

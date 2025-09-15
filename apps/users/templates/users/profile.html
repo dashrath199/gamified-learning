@@ -4,14 +4,14 @@
 
 {% block content %}
 <div id="profile-container">
-    <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8 animate-pulse">
-        <div class="h-24 bg-gray-300 rounded-lg"></div>
+    <div class="mx-auto max-w-7xl animate-pulse">
+        <div class="h-24 bg-gray-200 rounded-lg"></div>
         <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="md:col-span-1 space-y-8">
-                <div class="bg-gray-300 h-48 rounded-lg"></div>
+                <div class="bg-gray-200 h-48 rounded-lg"></div>
             </div>
             <div class="md:col-span-2 space-y-8">
-                <div class="bg-gray-300 h-64 rounded-lg"></div>
+                <div class="bg-gray-200 h-64 rounded-lg"></div>
             </div>
         </div>
     </div>
@@ -22,7 +22,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('accessToken');
-    // THIS IS THE CORRECTED LINE:
     if (!token) { window.location.href = "{% url 'users:login' %}"; return; }
 
     const profileContainer = document.getElementById('profile-container');
@@ -37,48 +36,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await response.json();
         const user = data.user;
 
-        // Calculate XP for progress bar
         const currentLevelXp = user.level > 1 ? LEVEL_THRESHOLDS[user.level - 2] : 0;
         const nextLevelXp = LEVEL_THRESHOLDS[user.level - 1] || user.xp;
         const xpIntoLevel = user.xp - currentLevelXp;
         const xpForLevel = nextLevelXp - currentLevelXp;
         const progressPercentage = xpForLevel > 0 ? Math.round((xpIntoLevel / xpForLevel) * 100) : 100;
 
-        let badgesHtml = '';
-        if (data.badges.length > 0) {
-            badgesHtml = data.badges.map(userBadge => {
-                const badge = userBadge.badge;
-                return `
-                    <div class="text-center p-3 border rounded-lg transition-all hover:shadow-md hover:border-indigo-300">
-                        <div class="text-5xl" title="${badge.description}">${badge.icon || '🏆'}</div>
-                        <div class="text-sm font-semibold mt-2 truncate">${badge.name}</div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            badgesHtml = '<p class="text-sm text-gray-500 col-span-full">No badges earned yet. Keep playing!</p>';
-        }
+        const badgesHtml = data.badges.length > 0 ? data.badges.map(userBadge => {
+            const badge = userBadge.badge;
+            return `
+                <div class="text-center p-3 border rounded-lg transition-all hover:shadow-md hover:border-brand-purple">
+                    <div class="text-5xl" title="${badge.description}">${badge.icon || '🏆'}</div>
+                    <div class="text-sm font-semibold mt-2 truncate">${badge.name}</div>
+                </div>
+            `;
+        }).join('') : '<p class="text-sm text-gray-500 col-span-full">No badges earned yet. Keep playing!</p>';
 
-        let activityHtml = '';
-        if (data.results.length > 0) {
-            activityHtml = data.results.map(result => `
-                <li class="flex justify-between items-center text-sm p-3 bg-gray-50 rounded-md transition-all hover:bg-gray-100">
-                    <div>
-                        <span class="font-medium text-gray-800">Played <strong>${result.game.title}</strong></span>
-                        <span class="text-gray-500 ml-2 text-xs">${new Date(result.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <span class="font-mono text-indigo-600 font-semibold">+${result.xp_earned} XP</span>
-                </li>
-            `).join('');
-        } else {
-            activityHtml = '<p class="text-sm text-gray-500">No recent activity. Play a game to get started!</p>';
-        }
+        const activityHtml = data.results.length > 0 ? data.results.map(result => `
+            <li class="flex justify-between items-center text-sm p-3 bg-gray-50 rounded-md transition-all hover:bg-gray-100">
+                <div>
+                    <span class="font-medium text-gray-800">Played <strong>${result.game.title}</strong></span>
+                    <span class="text-gray-500 ml-2 text-xs">${new Date(result.created_at).toLocaleDateString()}</span>
+                </div>
+                <span class="font-mono text-brand-purple font-semibold">+${result.xp_earned} XP</span>
+            </li>
+        `).join('') : '<p class="text-sm text-gray-500">No recent activity. Play a game to get started!</p>';
 
         profileContainer.innerHTML = `
             <div>
               <header class="bg-white shadow-sm">
                 <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex items-center gap-4">
-                    <img class="h-16 w-16 rounded-full" src="https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=random&size=128" alt="Profile avatar">
+                    <img class="h-16 w-16 rounded-full" src="https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=8A63D2&color=fff&size=128" alt="Profile avatar">
                     <div>
                         <h1 class="text-xl font-bold leading-6 text-gray-900">${user.full_name}</h1>
                         <p class="mt-1 text-sm text-gray-500">${user.email}</p>
@@ -94,11 +82,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="mt-4 space-y-6">
                             <div>
                                 <div class="flex justify-between font-semibold">
-                                    <span class="text-indigo-600">Level ${user.level}</span>
+                                    <span class="text-brand-purple">Level ${user.level}</span>
                                     <span class="text-gray-500">${user.xp} XP</span>
                                 </div>
                                 <div class="mt-2 w-full bg-gray-200 rounded-full h-2.5">
-                                    <div class="bg-indigo-600 h-2.5 rounded-full" style="width: ${progressPercentage}%"></div>
+                                    <div class="bg-brand-purple h-2.5 rounded-full" style="width: ${progressPercentage}%"></div>
                                 </div>
                                 <div class="text-right text-xs text-gray-500 mt-1">${xpForLevel > 0 ? (xpForLevel - xpIntoLevel) : 0} XP to next level</div>
                             </div>
