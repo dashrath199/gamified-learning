@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-white">
+    <a href="{% url 'core:homepage' %}" ...>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LearnSphere{% endblock %}</title>
+    <link href="/static/css/styles.css" rel="stylesheet">
+    <script src="//unpkg.com/alpinejs" defer></script>
+</head>
+<body class="h-full">
+    <div class="flex min-h-full flex-1">
+        <div class="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
+            <div class="mx-auto w-full max-w-sm lg:w-96">
+                <div>
+                    <a href="{% url 'core:homepage' %}">
+                        <h1 class="text-3xl font-bold text-indigo-600">🎓 LearnSphere</h1>
+                    </a>
+                    {% block auth_content %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+
+        <div class="relative hidden w-0 flex-1 lg:block">
+            <img class="absolute inset-0 h-full w-full object-cover" src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=3024&auto=format&fit=crop" alt="A vibrant classroom setting">
+            <div class="absolute inset-0 bg-indigo-700 mix-blend-multiply"></div>
+        </div>
+    </div>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

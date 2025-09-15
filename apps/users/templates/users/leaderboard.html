@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900">Leaderboard</h1>
+            <p class="mt-2 text-sm text-gray-700">See who's at the top of their game. Keep playing to climb the ranks!</p>
+        </div>
+        <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+             <select id="grade-filter" name="grade" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600">
+                <option value="">All Grades</option>
+             </select>
+        </div>
+    </div>
+    <div class="mt-8 flow-root">
+        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Rank</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Student</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Grade</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Level</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">XP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body" class="divide-y divide-gray-200 bg-white">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('accessToken');
+    // THIS IS THE CORRECTED LINE:
+    if (!token) { window.location.href = "{% url 'users:login' %}"; return; }
+
+    const leaderboardBody = document.getElementById('leaderboard-body');
+    const gradeFilter = document.getElementById('grade-filter');
+
+    const fetchLeaderboard = async (gradeId = null) => {
+        let url = '/api/v1/leaderboard/';
+        if (gradeId) {
+            url += `?grade_id=${gradeId}`;
+        }
+        
+        try {
+            const response = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Failed to fetch leaderboard');
+            
+            const users = await response.json();
+            leaderboardBody.innerHTML = ''; 
+
+            if (users.length === 0) {
+                leaderboardBody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">No data to display.</td></tr>';
+                return;
+            }
+
+            const rankClasses = {
+                1: 'bg-yellow-100 font-bold',
+                2: 'bg-gray-200',
+                3: 'bg-yellow-50'
+            };
+            const rankIcons = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+            users.forEach((user, index) => {
+                const rank = index + 1;
+                const rowClass = rankClasses[rank] || '';
+                const rankIcon = rankIcons[rank] || rank;
+                
+                const row = `
+                    <tr class="${rowClass}">
+                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                            <span class="text-lg">${rankIcon}</span>
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 flex-shrink-0">
+                                    <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=random" alt="">
+                                </div>
+                                <div class="ml-4">${user.full_name}</div>
+                            </div>
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">${user.grade_name || 'N/A'}</td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">${user.level}</td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm font-semibold text-indigo-600">${user.xp} XP</td>
+                    </tr>
+                `;
+                leaderboardBody.innerHTML += row;
+            });
+        } catch (error) {
+            leaderboardBody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-600">Could not load leaderboard.</td></tr>';
+        }
+    };
+
+    fetch('/api/v1/grades/', { headers: { 'Authorization': `Bearer ${token}` }})
+        .then(res => res.json())
+        .then(grades => {
+            grades.forEach(grade => {
+                const option = document.createElement('option');
+                option.value = grade.id;
+                option.textContent = grade.display_name;
+                gradeFilter.appendChild(option);
+            });
+        });
+    
+    gradeFilter.addEventListener('change', () => {
+        // Show a loader on filter change if you want
+        leaderboardBody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">Loading...</td></tr>'; 
+        fetchLeaderboard(gradeFilter.value);
+    });
+
+    fetchLeaderboard();
+});
+</script>
+{% endblock %}
